@@ -1,7 +1,4 @@
-export default function HistorialCapaciationesPage() {
-  return (
-    <div>
-      <p>Historial de Capacitaciones</p>
-    </div>
-  );
+import { HistorialCapacitacionesView } from "@/modules/historial-capacitaciones/ui/views/historial-capacitaciones-view";
+export default function HistorialCapacitacionesPage() {
+  return <HistorialCapacitacionesView />;
 }
