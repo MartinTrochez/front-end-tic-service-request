@@ -23,7 +23,9 @@ import {
 const formSchema = z.object({
   cuit: z
     .string()
-    .min(1, { error: "El número de cuit es requerido" })
+    .min(11, {
+      error: "El número de cuit es requerido y de una longitud 11 como mínimo",
+    })
     .regex(/^\d+$/, { error: "El cuit debe contener solo números" }),
   password: z.string().min(1, { error: "Contraseña es requerida" }),
 });
@@ -52,7 +54,7 @@ export const SignInView = () => {
   return (
     <div className="flex flex-col gap-6 items-center">
       <Card className="overflow-hidden p-0 max-w-sm">
-        <CardContent className="grid p-0">
+        <CardContent className="grid p-0 bg-white">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 md:p-8">
               <div className="flex flex-col gap-6">
