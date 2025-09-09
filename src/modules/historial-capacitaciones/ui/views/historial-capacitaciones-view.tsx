@@ -18,50 +18,126 @@ interface Capacitacion {
   fechaSolicitud: string;
   fechaCapacitacion?: string;
   estado: EstadoCapacitacion;
-  instructor?: string;
+  referente?: string;
   duracion?: string;
 }
 
-// Datos de ejemplo (mock)
+// Datos ejemplo
 const capacitacionesMock: Capacitacion[] = [
-  {
-    id: "1",
-    titulo: "Seguridad Laboral Básica",
-    descripcion: "Capacitación sobre normas básicas de seguridad en el lugar de trabajo",
-    fechaSolicitud: "2024-08-10",
-    fechaCapacitacion: "2024-08-25",
-    estado: "aceptada",
-    instructor: "Juan Pérez",
-    duracion: "4 horas"
-  },
-  {
-    id: "2",
-    titulo: "Primeros Auxilios",
-    descripcion: "Curso de primeros auxilios y atención de emergencias",
-    fechaSolicitud: "2024-08-15",
-    estado: "en-espera",
-    duracion: "6 horas"
-  },
-  {
-    id: "3",
-    titulo: "Manejo de Equipos de Protección",
-    descripcion: "Capacitación sobre el uso correcto de EPP",
-    fechaSolicitud: "2024-08-05",
-    fechaCapacitacion: "2024-08-20",
-    estado: "rechazada",
-    duracion: "3 horas"
-  },
-  {
-    id: "4",
-    titulo: "Prevención de Riesgos",
-    descripcion: "Identificación y prevención de riesgos laborales",
-    fechaSolicitud: "2024-08-18",
-    fechaCapacitacion: "2024-09-02",
-    estado: "aceptada",
-    instructor: "María González",
-    duracion: "5 horas"
-  }
+{
+  id: "1",
+  titulo: "Introducción a la Computación",
+  descripcion: "Uso básico de la computadora: encendido, teclado, mouse y programas iniciales",
+  fechaSolicitud: "2024-09-06",
+  fechaCapacitacion: "2024-09-14",
+  estado: "en-espera",
+  referente: "Ana Torres",
+  duracion: "2 horas"
+},
+{
+  id: "2",
+  titulo: "Taller de Computación",
+  descripcion: "Manejo intermedio de sistemas operativos y software común",
+  fechaSolicitud: "2024-09-07",
+  fechaCapacitacion: "2024-09-15",
+  estado: "aceptada",
+  referente: "Luis Martínez",
+  duracion: "2 horas"
+},
+{
+  id: "3",
+  titulo: "Uso de Office",
+  descripcion: "Conceptos básicos de Word, Excel y PowerPoint",
+  fechaSolicitud: "2024-09-08",
+  fechaCapacitacion: "2024-09-15",
+  estado: "aceptada",
+  referente: "Marta Gómez",
+  duracion: "4 horas"
+},
+{
+  id: "4",
+  titulo: "Mantenimiento Básico de PCs",
+  descripcion: "Limpieza física, organización de archivos y cuidados generales del equipo",
+  fechaSolicitud: "2024-09-09",
+  fechaCapacitacion: "2024-09-21",
+  estado: "en-espera",
+  referente: "Diego Suárez",
+  duracion: "3 horas"
+},
+{
+  id: "5",
+  titulo: "Seguridad Informática",
+  descripcion: "Buenas prácticas para proteger la información personal y evitar fraudes en línea",
+  fechaSolicitud: "2024-09-10",
+  estado: "aceptada",
+  referente: "Claudia Ramírez",
+  duracion: "3 horas"
+}
 ];
+export default function FiltrosCard() {
+  const [filtroTexto, setFiltroTexto] = useState(""); 
+  const [filtroEstado, setFiltroEstado] = useState("todos"); 
+
+  return (
+    <Card>
+      <CardHeader className="pb-3 md:pb-6">
+        <CardTitle className="text-base md:text-lg">Filtros</CardTitle>
+    </CardHeader>
+
+  <CardContent className="pt-0">
+    <div className="flex flex-col gap-3 md:gap-4">
+      <div className="flex-1">
+        <Input
+          placeholder="Buscar por título o descripción..."
+          value={filtroTexto}
+          onChange={(e) => setFiltroTexto(e.target.value)}
+          className="text-sm"
+        />
+      </div>
+
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        <Button
+          variant={filtroEstado === "todos" ? "default" : "outline"}
+          onClick={() => setFiltroEstado("todos")}
+          size="sm"
+          className="whitespace-nowrap"
+        >
+          Todos
+        </Button>
+
+        <Button
+          variant={filtroEstado === "aceptada" ? "default" : "outline"}
+          onClick={() => setFiltroEstado("aceptada")}
+          size="sm"
+          className="whitespace-nowrap"
+        >
+          Aceptadas
+        </Button>
+
+        <Button
+          variant={filtroEstado === "en-espera" ? "default" : "outline"}
+          onClick={() => setFiltroEstado("en-espera")}
+          size="sm"
+          className="whitespace-nowrap"
+        >
+          En Espera
+        </Button>
+
+        <Button
+          variant={filtroEstado === "rechazada" ? "default" : "outline"}
+          onClick={() => setFiltroEstado("rechazada")}
+          size="sm"
+          className="whitespace-nowrap"
+        >
+          Rechazadas
+        </Button>
+      </div>
+    </div>
+  </CardContent>
+</Card>
+  );
+}
+
 
 const getEstadoConfig = (estado: EstadoCapacitacion) => {
   switch (estado) {
@@ -107,11 +183,8 @@ export const HistorialCapacitacionesView = () => {
         <div className="flex flex-col gap-3 md:gap-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl md:text-3xl font-bold">Historial de Capacitaciones</h1>
-            <Button className="bg-[#FA6D1C] hover:bg-[#338BE7] rounded-full text-sm md:text-base px-3 md:px-4">
-              Nueva Solicitud
-            </Button>
           </div>
-          <p className="text-muted-foreground text-sm md:text-base">
+          <p className="font-medium">
             Aquí puedes ver todas tus solicitudes de capacitación y su estado actual
           </p>
         </div>
@@ -235,12 +308,12 @@ export const HistorialCapacitacionesView = () => {
                           </div>
                         )}
 
-                        {capacitacion.instructor && (
+                        {capacitacion.referente && (
                           <div className="flex items-center gap-2">
                             <div className="w-4 h-4 bg-muted-foreground rounded-full flex-shrink-0" />
                             <div>
-                              <p className="font-medium">Instructor</p>
-                              <p className="text-muted-foreground text-xs">{capacitacion.instructor}</p>
+                              <p className="font-medium">Referente</p>
+                              <p className="text-muted-foreground text-xs">{capacitacion.referente}</p>
                             </div>
                           </div>
                         )}
