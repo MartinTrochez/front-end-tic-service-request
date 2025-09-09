@@ -6,9 +6,10 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { NavbarSidebar } from "./navbar-sidebar";
-import { useState } from "react";
+import { startTransition, useState, useTransition } from "react";
 import { MenuIcon } from "lucide-react";
 import Image from "next/image";
+import { deleteSession } from "@/lib/session";
 
 interface NavbarItemProps {
   href: string;
@@ -39,6 +40,13 @@ const navbarItems = [
 export const Navbar = () => {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isPending, setIsPending] = useTransition();
+
+  const handleSignOut = () => {
+    startTransition(async () => {
+      await deleteSession();
+    });
+  };
 
   return (
     <nav className="px-4 h-20 flex border-b-2 border-b-black justify-between font-medium bg-white">
@@ -68,9 +76,19 @@ export const Navbar = () => {
         <Button
           asChild
           variant="secondary"
+          disabled={isPending}
           className="bg-[#FA6D1C] rounded-full hover:bg-[#338BE7] px-3.5 text-lg"
+          onClick={handleSignOut}
         >
-          <Link href="/sign-in" className="text-white">Salir</Link>
+          <span>
+            {isPending ? (
+              "Saliendo de la aplicacion"
+            ) : (
+              <Link href="/sign-in" className="text-white">
+                Salir
+              </Link>
+            )}
+          </span>
         </Button>
       </div>
 

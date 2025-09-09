@@ -19,6 +19,6 @@ export default async function PerfilIdPage({ params }: PerfilIdPageProps) {
   // )
 
   return (
-    <PerfilView perfilId={perfilId} /> 
+    <PerfilView directorDNI={perfilId} /> 
   )
 }

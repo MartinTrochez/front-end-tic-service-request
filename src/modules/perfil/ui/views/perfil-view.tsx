@@ -1,3 +1,5 @@
+"use client"
+
 import { User } from "lucide-react";
 
 import { Label } from "@/components/ui/label";
@@ -11,12 +13,12 @@ interface UserInfo {
 }
 
 interface PerfilIdViewProps {
-  perfilId: string;
+  directorDNI: string;
 }
 
 // NOTE:Ver para modificar con inputs
 
-export const PerfilView = ({ perfilId }: PerfilIdViewProps) => {
+export const PerfilView = ({ directorDNI }: PerfilIdViewProps) => {
   const userInfo: UserInfo = {
     nombre: "María",
     apellido: "González",
@@ -24,6 +26,7 @@ export const PerfilView = ({ perfilId }: PerfilIdViewProps) => {
     instituto: "Instituto Tecnológico Nacional",
   };
 
+  // TODO: Agregar telefono, email y permitir cambios
   return (
     <div className="flex flex-col items-center">
       <Card className="overflow-hidden p-0 max-w-sm">
