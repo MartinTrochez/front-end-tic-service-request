@@ -22,7 +22,7 @@ const NavbarItem = ({ href, children, isActive }: NavbarItemProps) => {
       asChild
       variant="outline"
       className={cn(
-        "bg-transparent hover:bg-transparent rounded-full hover:border-primary border-transparent px-3.5 text-lg",
+        "bg-muted hover:bg-muted rounded-full hover:border-primary px-3.5 text-lg",
         isActive && "bg-black text-white hover:bg-black hover:text-white",
       )}
     >

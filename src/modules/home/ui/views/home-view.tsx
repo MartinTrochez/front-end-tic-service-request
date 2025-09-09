@@ -28,7 +28,7 @@ const homeItems = [
 
 export const HomeView = () => {
   return (
-    <div className="flex flex-col items-center justify-center gap-4 min-h-screen">
+    <div className="flex flex-col items-center justify-center gap-20">
       {homeItems.map((item) => (
         <HomeItem key={item.href} href={item.href}>
           {item.children}
