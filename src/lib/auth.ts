@@ -19,11 +19,12 @@ export const auth = betterAuth({
     username(),
   ],
   user: {
+    modelName: "users",
     additionalFields: {
       dni: {
         type: "string",
         required: true,
-        input: true,
+        input: false,
       },
       enabled: {
         type: "boolean",

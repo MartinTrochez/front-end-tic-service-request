@@ -19,36 +19,39 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-
-const formSchema = z.object({
-  cuit: z
-    .string()
-    .min(11, {
-      error: "El número de cuit es requerido y de una longitud 11 como mínimo",
-    })
-    .regex(/^\d+$/, { error: "El cuit debe contener solo números" }),
-  password: z.string().min(1, { error: "Contraseña es requerida" }),
-});
+import { signInAction } from "../../server/server";
+import { SignInData, signInSchema } from "../../schemas";
 
 export const SignInView = () => {
   const router = useRouter();
   const [pending, setPending] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof signInSchema>>({
+    resolver: zodResolver(signInSchema),
     defaultValues: {
-      cuit: "",
+      dni: "",
       password: "",
     },
   });
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
-    // TODO: Falta implementar sistema de autenticacion
-    // setError(null);
-    // setPending(true);
+  const onSubmit = async (data: SignInData) => {
+    setError(null);
+    setPending(true);
 
-    router.push("/");
+    try {
+      const result = await signInAction(data);
+      if (result.success) {
+
+        router.push("/");
+      } else {
+        setError(result.message || "Error desconocido al iniciar sesión.");
+      }
+    } catch (err) {
+      setError("Error de conexión. Intenta de nuevo.");
+    } finally {
+      setPending(false);
+    }
   };
 
   return (
@@ -63,21 +66,21 @@ export const SignInView = () => {
                     Bienvenido al login de Servicios de Capacitaciones
                   </h1>
                   <p className="text-muted-foreground text-balance">
-                    Ingresa con tu número de cuit y contraseña
+                    Ingresa con tu número de dni y contraseña
                   </p>
                 </div>
                 <div className="grid gap-3">
                   <FormField
                     control={form.control}
-                    name="cuit"
+                    name="dni"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Cuit</FormLabel>
+                        <FormLabel>DNI</FormLabel>
                         <FormControl>
                           <Input
                             className="placeholder:italic"
-                            type="cuit"
-                            placeholder="Ingresa tu numero de Cuit"
+                            type="text"
+                            placeholder="Ingresa tu numero de dni"
                             {...field}
                           />
                         </FormControl>
