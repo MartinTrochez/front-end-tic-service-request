@@ -1,11 +1,12 @@
 "use server";
 
-import { createSession } from "@/lib/session";
+import { createSession, deleteSession } from "@/lib/session";
 import bcrypt from "bcrypt";
 import { BACKEND_URL } from "@/modules/constants";
 
 import { signInSchema } from "../schemas";
 import { SignInData } from "../schemas";
+import { redirect } from "next/navigation";
 
 async function verifyUser(dni: string, password: string): Promise<{ valid: boolean; userId: string | null }> {
   try {
