@@ -48,6 +48,7 @@ export const SignInView = () => {
         setError(result.message || "Error desconocido al iniciar sesión.");
       }
     } catch (err) {
+      console.log(err)
       setError("Error de conexión. Intenta de nuevo.");
     } finally {
       setPending(false);

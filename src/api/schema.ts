@@ -1,10 +1,6 @@
-// TODO: 
-// Permitir que el director pueda cambiar
-// Cambiar: Nombre, appellido, mail, numero de telefono
-
 import { z } from "zod"
 
-export const directorUpdateSchema = z.object({
+export const directors = z.object({
     dni: z
         .string()
         .min(8, {
@@ -28,7 +24,7 @@ export const directorUpdateSchema = z.object({
         .string()
         .min(1, { error: "Apellido es requerido" }),
     phone: z
-        .string().min(10, {error: "El telefono debe de ser de 10 digitos"}),
+        .string(),
     mail: z.email(),
     enabled: z.boolean(),
 })

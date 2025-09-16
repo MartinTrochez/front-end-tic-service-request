@@ -1,42 +1,31 @@
-import { betterAuth } from "better-auth";
-import { organization, username } from "better-auth/plugins"
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "@/db";
-import * as schema from "@/db/schema"
+import { decrypt, getSession } from "./session";
 
-export const auth = betterAuth({
-  emailAndPassword: {
-    enabled: true,
-  },
-  database: drizzleAdapter(db, {
-    provider: "pg",
-    schema: {
-      ...schema,
-    }
-  }),
-  plugins: [
-    organization(),
-    username(),
-  ],
-  user: {
-    modelName: "users",
-    additionalFields: {
-      dni: {
-        type: "string",
-        required: true,
-        input: false,
-      },
-      enabled: {
-        type: "boolean",
-        required: true,
-        defaultValue: true,
-        input: false,
-      },
-      institution: {
-        type: "string",
-        required: false,
-        input: false,
+import type { JWTPayload } from "jose";
+
+export type SessionPayload = JWTPayload & {
+  userId: string
+};
+
+export const auth = {
+  api: {
+    getSession: async ({ headers }: { headers: Headers }): Promise<SessionPayload | null> => {
+      const cookieHeader = headers.get("cookie") ?? "";
+      const token = cookieHeader
+        .split(";")
+        .map((c) => c.trim())
+        .find((c) => c.startsWith("session="))
+        ?.split("=")[1]
+
+      if (!token) return null
+
+      try {
+        return (await decrypt(token)) as SessionPayload;
+      } catch {
+        return null
       }
-    }
-  }
-});
+    },
+  },
+  server: {
+    getSession,
+  },
+};
