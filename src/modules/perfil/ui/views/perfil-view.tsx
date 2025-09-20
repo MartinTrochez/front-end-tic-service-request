@@ -13,7 +13,6 @@ import { LoadingState } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
 import { directors } from "@/api/schema";
 import { useForm } from "react-hook-form";
-import { directorUpdateSchema } from "../../schemas";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -53,9 +52,9 @@ export const PerfilView = () => {
   const director = directors.parse(data);
 
   const updateDirector = useMutation<
-    z.infer<typeof directorUpdateSchema>,
+    z.infer<typeof directors>,
     Error,
-    z.infer<typeof directorUpdateSchema>
+    z.infer<typeof directors>
   >(
     trpc.perfil.update.mutationOptions({
       onSuccess: async () => {
@@ -240,42 +239,3 @@ export const PerfilViewError = () => {
     />
   );
 };
-
-// <div className="divide-y space-y-2 pb-4">
-//   <div className="pb-2">
-//     <Label>
-//       Nombre:{" "}
-//       <span className="font-normal">{director.name}</span>{" "}
-//     </Label>
-//   </div>
-//   <div className="pt-2 pb-2">
-//     <Label>
-//       Apellido:{" "}
-//       <span className="font-normal">{director.lastname}</span>{" "}
-//     </Label>
-//   </div>
-//   <div className="pt-2 pb-2">
-//     <Label>
-//       DNI: <span className="font-normal">{director.dni}</span>{" "}
-//     </Label>
-//   </div>
-//   <div className="pt-2 pb-2">
-//     <Label>
-//       Teléfono:{" "}
-//       <span className="font-normal">{director.phone}</span>{" "}
-//     </Label>
-//   </div>
-//   <div className="pt-2 pb-2">
-//     <Label>
-//       Email: <span className="font-normal">{director.mail}</span>{" "}
-//     </Label>
-//   </div>
-//   <div className="pt-2">
-//     <Label>
-//       Instituto:{" "}
-//       <span className="font-normal">
-//         {director.institute.domain}
-//       </span>{" "}
-//     </Label>
-//   </div>
-// </div>

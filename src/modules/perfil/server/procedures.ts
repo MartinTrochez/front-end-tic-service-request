@@ -1,15 +1,13 @@
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 
 import { directors } from "@/api/schema"
-
-import { directorUpdateSchema } from "../schemas"
 import { BACKEND_URL } from "@/modules/constants";
 import { TRPCError } from "@trpc/server";
 import z from "zod";
 
 export const perfilRouter = createTRPCRouter({
   update: protectedProcedure
-    .input(directorUpdateSchema)
+    .input(directors)
     .mutation(async ({ input, ctx }) => {
 
       const response = await fetch(`${BACKEND_URL}/api/directors/${input.dni}`, {
@@ -28,7 +26,7 @@ export const perfilRouter = createTRPCRouter({
         })
       }
 
-      const director = directorUpdateSchema.parse(await response.json())
+      const director = directors.parse(await response.json())
 
       return director
     }),
@@ -53,8 +51,6 @@ export const perfilRouter = createTRPCRouter({
       if (director.dni !== dni) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Director no encontrado" })
       }
-
-      console.log(director)
 
       return director
     }),

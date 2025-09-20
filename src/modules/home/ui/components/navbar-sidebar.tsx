@@ -6,7 +6,6 @@ import {
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
-import { startTransition, useTransition } from "react";
 import { deleteSession } from "@/lib/session";
 
 interface NavbarSidebarItem {
@@ -25,13 +24,6 @@ export const NavbarSidebar = ({
   open,
   onOpenChange,
 }: NavbarSidebarProps) => {
-  const [isPending, startTransition] = useTransition()
-
-  const handleSignOut = () => {
-    startTransition(async () => {
-      await deleteSession()
-    })
-  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -52,7 +44,7 @@ export const NavbarSidebar = ({
           ))}
           <div className="border-t">
             <Link
-              onClick={handleSignOut}
+              onClick={deleteSession}
               href="/sign-in"
               className="w-full text-left p-4 hover:bg-black hover:text-white flex items-center font-medium"
             >
