@@ -11,7 +11,7 @@ import {
 } from "@tanstack/react-query";
 import { LoadingState } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
-import { directors } from "@/db/schema";
+import { directors } from "@/api/schema";
 import { useForm } from "react-hook-form";
 import { directorUpdateSchema } from "../../schemas";
 import z from "zod";
