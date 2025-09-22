@@ -3,10 +3,7 @@
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 
-const secretKey = process.env.SESSION_SECRET;
-if (!secretKey) {
-  throw new Error("SESSION_SECRET is required");
-}
+const secretKey = process.env.SESSION_KEY;
 
 const EXPIRATION = "7d"
 // NOTE: 1 dia
@@ -26,8 +23,8 @@ export async function decrypt(token: string) {
   try {
     const { payload } = await jwtVerify(token, key, {
       algorithms: ["HS256"],
-    });
-    return payload;
+    })
+    return payload
   } catch (error) {
     throw new Error("Invalid session");
   }
