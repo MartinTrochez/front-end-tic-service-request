@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 
 const secretKey = process.env.SESSION_SECRET;
+console.log("🔑 SESSION_SECRET en runtime:", secretKey);
 if (!secretKey) {
   throw new Error("SESSION_SECRET is required");
 }
