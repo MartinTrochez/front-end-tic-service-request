@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 
-const secretKey = process.env.SESSION_KEY;
+const secretKey = process.env.SESSION_SECRET;
 
 const EXPIRATION = "7d"
 // NOTE: 1 dia
