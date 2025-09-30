@@ -9,8 +9,6 @@ export default async function HomePage() {
     headers: await headers()
   })
 
-  console.log(session!.userId)
-
   if (!session) {
     redirect("/sign-in")
   }
