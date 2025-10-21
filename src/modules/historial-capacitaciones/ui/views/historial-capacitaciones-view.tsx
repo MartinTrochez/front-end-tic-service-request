@@ -14,7 +14,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 
-type EstadoCapacitacion = "Aceptado" | "Finalizado" | "Enviado" | "Rechazado";
+type EstadoCapacitacion =
+  | "Aceptado"
+  | "Finalizado"
+  | "Validado"
+  | "Enviado"
+  | "Rechazado";
 
 interface Capacitacion {
   id: string;
@@ -118,7 +123,7 @@ const ConfirmationModal = ({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <Card className="max-w-md w-full">
-        <CardHeader className="pb-3">
+        <CardHeader>
           <div className="flex items-start justify-between">
             <CardTitle className="text-lg">Confirmar Validación</CardTitle>
             <Button
@@ -132,10 +137,13 @@ const ConfirmationModal = ({
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground mb-6">
-            ¿Estás seguro que deseas validar la capacitación "
-            <strong>{titulo}</strong>"?
-          </p>
+          <div className="space-y-2">
+            <AlertCircle className="text-red-800 text-lg" />
+            <p className="text-sm text-muted-foreground mb-6">
+              ¿Estás seguro que deseas validar la capacitación "
+              <strong>{titulo}</strong>"?
+            </p>
+          </div>
           <div className="flex gap-3 justify-end">
             <Button
               variant="outline"
@@ -214,16 +222,13 @@ export const HistorialCapacitacionesView = () => {
 
   const isValidarDisabled = (capacitacion: Capacitacion) => {
     return (
-      (capacitacion.estado === "Aceptado" ||
-        capacitacion.estado === "Finalizado") &&
-      !checkedCards[capacitacion.id]
+      capacitacion.estado !== "Finalizado" && !checkedCards[capacitacion.id]
     );
   };
 
   return (
     <div className="container mx-auto p-4 md:p-6 max-w-4xl">
       <div className="flex flex-col gap-4 md:gap-6">
-
         {/* Filtros */}
         <Card>
           <CardHeader>
@@ -381,8 +386,9 @@ export const HistorialCapacitacionesView = () => {
                             htmlFor={`checkbox-${capacitacion.id}`}
                             className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                           >
-                            Confirmo que he completado esta capacitación
+                            Confirmo que se ha completado esta capacitación
                           </label>
+                          text-lg{" "}
                         </div>
                       )}
 
@@ -391,7 +397,7 @@ export const HistorialCapacitacionesView = () => {
                         <div className="flex gap-2 pt-2">
                           <Button
                             variant="outline"
-                            className="rounded-full flex-1"
+                            className="rounded-full flex-1 text-lg"
                           >
                             Ver Detalles
                           </Button>
