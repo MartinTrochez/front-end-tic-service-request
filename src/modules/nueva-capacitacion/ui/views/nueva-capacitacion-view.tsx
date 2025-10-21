@@ -49,6 +49,12 @@ const ENCARGADOS = [
   { id: "andres", label: "Andrés Pérez" },
 ];
 
+const fechasOcupadas = [
+  new Date(2025, 10, 1),
+  new Date(2025, 10, 25),
+  new Date(2025, 10, 9), 
+]
+
 export default function NuevaCapacitacionPage() {
   const [submitting, setSubmitting] = useState(false);
 
@@ -156,12 +162,13 @@ export default function NuevaCapacitacionPage() {
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
+                        <Calendar
+                          mode="single"
+                          disabled={fechasOcupadas}
+                          classNames={{
+                            day_disabled: "text-gray-400 opacity-50 line-through cursor-not-allowed"
+                          }}
+                        />
                         </PopoverContent>
                       </Popover>
                       <FormMessage />

@@ -1,6 +1,6 @@
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 
-import { directors } from "@/api/schema"
+import { directors, technitians } from "@/api/schema"
 import { BACKEND_URL } from "@/modules/constants";
 import { TRPCError } from "@trpc/server";
 import z from "zod";
@@ -53,5 +53,40 @@ export const perfilRouter = createTRPCRouter({
       }
 
       return director
+    }),
+
+  getTechnitian: protectedProcedure
+    .input(z.void())
+    .query(async ({ ctx }) => {
+      const dni = ctx.auth.userId
+
+      const responseDirector = await fetch(`${BACKEND_URL}/api/directors/${dni}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+      })
+
+      if (!responseDirector.ok) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Director no encontrado" })
+      }
+
+      const director = technitians.parse(await responseDirector.json())
+      if (director.dni !== dni) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Director no encontrado" })
+      }
+
+      // const responseTechnitian = await fetch(`${BACKEND_URL}/api/directors/${director.institute.cuit}`, {
+      //   method: "GET",
+      //   headers: { "Content-Type": "application/json" },
+      //   cache: "no-store",
+      // });
+      //
+      // if (!responseDirector.ok) {
+      //   throw new TRPCError({ code: "NOT_FOUND", message: "Referente no encontrado" })
+      // }
+      //
+      // const technitian = technitians.parse(await responseTechnitian.json())
+
+      return null
     }),
 })

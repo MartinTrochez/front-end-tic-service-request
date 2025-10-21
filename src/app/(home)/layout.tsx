@@ -6,6 +6,7 @@ interface HomeProps {
   children: React.ReactNode;
 }
 
+
 export default function HomeLayout({ children }: HomeProps) {
   return (
     <div className="flex flex-col min-h-screen">

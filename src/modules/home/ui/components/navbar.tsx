@@ -34,7 +34,8 @@ const NavbarItem = ({ href, children, isActive }: NavbarItemProps) => {
 
 const navbarItems = [
   { href: "/", children: "Inicio" },
-  { href: "/perfil", children: "Perfil" },
+  { href: "/perfil-director", children: "Perfil de Director" },
+  { href: "/perfil-referente", children: "Perfil de Referente" },
 ];
 
 export const Navbar = () => {
@@ -87,8 +88,9 @@ export const Navbar = () => {
           variant="ghost"
           className="size-12 border-transparent bg-white"
           onClick={() => setIsSidebarOpen(true)}
-        ></Button>
-        <MenuIcon />
+        >
+          <MenuIcon />
+        </Button>
       </div>
     </nav>
   );

@@ -2,7 +2,7 @@ import { getSession } from "@/lib/session";
 import {
   PerfilViewError,
   PerfilViewLoading,
-  PerfilView,
+  PerfilDirectorView,
 } from "@/modules/perfil/ui/views/perfil-view";
 import { getQueryClient, trpc } from "@/trpc/server";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
@@ -27,7 +27,7 @@ export default async function PerfilIdPage() {
       <HydrationBoundary state={dehydrate(queryClient)}>
         <Suspense fallback={<PerfilViewLoading />}>
           <ErrorBoundary fallback={<PerfilViewError />}>
-            <PerfilView />
+            <PerfilDirectorView />
           </ErrorBoundary>
         </Suspense>
       </HydrationBoundary>
