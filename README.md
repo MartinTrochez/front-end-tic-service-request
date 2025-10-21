@@ -1,36 +1,113 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# README del Proyecto
 
-## Getting Started
+## Manual de Usuario
 
-First, run the development server:
+### Inicio de Sesión
+1. Navega a la página de inicio de sesión (`/sign-in`).
+2. Ingresa tu DNI y contraseña.
+3. Haz clic en "Iniciar Sesión" para acceder a la aplicación.
+4. Si no tienes sesión, serás redirigido automáticamente a esta página.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Página Principal (Inicio)
+- Después de iniciar sesión, llegarás a la página principal.
+- Desde aquí, puedes acceder a las secciones: Perfil, Nueva Capacitación, Historial de Capacitaciones.
+- Usa la navegación para moverte entre las diferentes áreas de la aplicación.
+
+### Perfil
+- En la sección de perfil, puedes ver tus datos personales.
+- Para directores: Puedes editar nombre, apellido, teléfono y email. El DNI y el dominio del instituto son de solo lectura.
+- Para referentes técnicos: Los datos son de solo lectura (funcionalidad en desarrollo).
+- Al actualizar, se enviará la información al backend y se mostrará una notificación de éxito.
+
+### Nueva Capacitación
+- Accede a la página de nueva capacitación para crear una nueva sesión.
+- Llena el formulario con los detalles requeridos.
+- Envía el formulario para registrar la capacitación.
+
+### Historial de Capacitaciones
+- Ve el historial de capacitaciones realizadas.
+- Aquí puedes revisar sesiones pasadas y sus detalles.
+
+## Módulos
+
+### Autenticación
+Maneja la autenticación de usuarios, incluyendo la funcionalidad de inicio de sesión y gestión de sesiones.
+
+### Inicio
+Sirve como el panel principal o página de inicio, proporcionando navegación y acceso a varias funciones como perfil, capacitaciones y creación de nuevas capacitaciones.
+
+### Solictar una visita
+Permite a los usuarios crear nuevas sesiones de capacitación, incluyendo envío de formularios e integración con el backend.
+
+###  Historial de Visitas
+Gestiona el historial de sesiones de capacitación, permitiendo a los usuarios ver capacitaciones pasadas.
+
+### Perfil
+
+**Perfil de Director**
+```mermaid
+sequenceDiagram
+    participant Usuario
+    participant Página as perfil-director/page.tsx
+    participant Vista as PerfilDirectorView
+    participant TRPC as Cliente TRPC
+    participant Proc as procedures.ts (perfilRouter)
+    participant Backend
+
+    %% Carga Inicial Comenzando desde la Página
+    Usuario->>Página: Navegar a la página
+    Página->>Página: getSession()
+    alt Sin sesión
+        Página->>Usuario: redirigir("/sign-in")
+    else Con sesión
+        Página->>TRPC: prefetchQuery(getDirector)
+        TRPC->>Proc: getDirector.query()
+        Proc->>Backend: GET /api/directors/{dni}
+        Backend-->>Proc: Datos del director
+        Proc-->>TRPC: Datos del director analizados
+        TRPC-->>Página: Estado deshidratado
+
+        Página->>Vista: Renderizar con HydrationBoundary & Suspense
+        Vista->>TRPC: useSuspenseQuery(getDirector)
+        TRPC-->>Vista: Datos hidratados
+    end
+
+    %% Flujo de Actualización
+    Usuario->>Vista: Enviar formulario
+    Vista->>TRPC: mutate(update)
+    TRPC->>Proc: update.mutation(input)
+    Proc->>Backend: PUT /api/directors/{dni}
+    Backend-->>Proc: Datos del director actualizados
+    Proc-->>TRPC: Datos actualizados analizados
+    TRPC-->>Vista: onSuccess (invalidar consultas, mostrar toast, router.refresh)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Perfil de Referente**
+```mermaid
+sequenceDiagram
+    participant Usuario
+    participant Página as perfil-referente/page.tsx
+    participant Vista as PerfilDirectorView
+    participant TRPC as Cliente TRPC
+    participant Proc as procedures.ts (perfilRouter)
+    participant Backend
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+    %% Carga Inicial Comenzando desde la Página
+    Usuario->>Página: Navegar a la página
+    Página->>Página: getSession()
+    alt Sin sesión
+        Página->>Usuario: redirigir("/sign-in")
+    else Con sesión
+        Página->>TRPC: prefetchQuery(getTechnitian)
+        TRPC->>Proc: getDirector.query()
+        Proc->>Backend: GET /api/tecnitian/{cuit}
+        Backend-->>Proc: Datos del Referente
+        Proc-->>TRPC: Datos del referente analizados
+        TRPC-->>Página: Estado deshidratado
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+        Página->>Vista: Renderizar con HydrationBoundary & Suspense
+        Vista->>TRPC: useSuspenseQuery(getTechnitian)
+        TRPC-->>Vista: Datos hidratados
+    end
+```
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
