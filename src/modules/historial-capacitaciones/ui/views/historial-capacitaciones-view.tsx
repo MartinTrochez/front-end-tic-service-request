@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CalendarDays,
   CheckCircle,
@@ -13,6 +13,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useTRPC } from "@/trpc/client";
+import { useQuery } from "@tanstack/react-query";
+import { LoadingState } from "@/components/loading-state";
+import { ErrorState } from "@/components/error-state";
+import { techSupports } from "@/api/schema";
 
 type EstadoCapacitacion =
   | "Aceptado"
@@ -37,57 +42,13 @@ interface ConfimationModalProps {
   titulo: string;
 }
 
-const capacitacionesMock: Capacitacion[] = [
-  {
-    id: "1",
-    titulo: "Introducción a la Computación",
-    descripcion:
-      "Uso básico de la computadora: encendido, teclado, mouse y programas iniciales",
-    fechaCapacitacion: "2024-09-14",
-    estado: "Enviado",
-    referente: "Ana Torres",
-  },
-  {
-    id: "2",
-    titulo: "Taller de Computación",
-    descripcion: "Manejo intermedio de sistemas operativos y software común",
-    fechaCapacitacion: "2024-09-15",
-    estado: "Aceptado",
-    referente: "Luis Martínez",
-  },
-  {
-    id: "3",
-    titulo: "Uso de Office",
-    descripcion: "Conceptos básicos de Word, Excel y PowerPoint",
-    fechaCapacitacion: "2024-09-15",
-    estado: "Aceptado",
-    referente: "Marta Gómez",
-  },
-  {
-    id: "4",
-    titulo: "Mantenimiento Básico de PCs",
-    descripcion:
-      "Limpieza física, organización de archivos y cuidados generales del equipo",
-    fechaCapacitacion: "2024-09-21",
-    estado: "Enviado",
-    referente: "Diego Suárez",
-  },
-  {
-    id: "5",
-    titulo: "Seguridad Informática",
-    descripcion:
-      "Buenas prácticas para proteger la información personal y evitar fraudes en línea",
-    fechaCapacitacion: "2024-09-22",
-    estado: "Finalizado",
-    referente: "Claudia Ramírez",
-  },
-];
+// Los datos reales vendrán del backend. El mock queda removido para evitar confusión.
 
 const getEstadoConfig = (estado: EstadoCapacitacion) => {
   switch (estado) {
     case "Rechazado":
       return {
-        icon: CheckCircle,
+        icon: XCircle,
         color: "bg-red-100 text-red-800 border-red-200",
         label: "Rechazado",
       };
@@ -108,6 +69,12 @@ const getEstadoConfig = (estado: EstadoCapacitacion) => {
         icon: AlertCircle,
         color: "bg-yellow-100 text-yellow-800 border-yellow-200",
         label: "En Espera",
+      };
+    case "Validado":
+      return {
+        icon: CheckCircle,
+        color: "bg-blue-100 text-blue-800 border-blue-200",
+        label: "Validado",
       };
   }
 };
@@ -163,8 +130,12 @@ const ConfirmationModal = ({
 };
 
 export const HistorialCapacitacionesView = () => {
-  const [capacitaciones, setCapacitaciones] =
-    useState<Capacitacion[]>(capacitacionesMock);
+  const trpc = useTRPC();
+  const supportsQuery = useQuery(
+    trpc.historialCapacitaciones.getInstituteSupports.queryOptions()
+  );
+
+  const [capacitaciones, setCapacitaciones] = useState<Capacitacion[]>([]);
   const [filtroTexto, setFiltroTexto] = useState<string>("");
   const [filtroEstado, setFiltroEstado] = useState<
     EstadoCapacitacion | "todos"
@@ -173,6 +144,49 @@ export const HistorialCapacitacionesView = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedCapacitacion, setSelectedCapacitacion] =
     useState<Capacitacion | null>(null);
+
+  useEffect(() => {
+    if (!supportsQuery.data) return;
+    try {
+      // Mapear a UI; el server ya valida. La fecha puede venir como string.
+      const items: Capacitacion[] = supportsQuery.data.map((s: any) => {
+        const fecha = s.date instanceof Date
+          ? s.date.toISOString().slice(0, 10)
+          : typeof s.date === "string"
+            ? new Date(s.date).toISOString().slice(0, 10)
+            : undefined;
+
+        // Normalizamos el estado a Title Case esperado por la UI
+        const estadoRaw = s.supportState?.name ?? "Enviado";
+        const estado: EstadoCapacitacion = ((): EstadoCapacitacion => {
+          const e = (estadoRaw || "").toLowerCase();
+          if (e.includes("acept")) return "Aceptado";
+          if (e.includes("rechaz")) return "Rechazado";
+          if (e.includes("finaliz")) return "Finalizado";
+          if (e.includes("valid")) return "Validado";
+          return "Enviado";
+        })();
+
+        const referente = s.technician
+          ? `${s.technician.name}${s.technician.lastname ? " " + s.technician.lastname : ""}`
+          : undefined;
+
+        return {
+          id: String(s.id ?? s.code),
+          titulo: s.supportType?.name ?? "Visita",
+          descripcion: s.description ?? "Sin descripción",
+          fechaCapacitacion: fecha,
+          estado,
+          referente,
+        };
+      });
+
+      setCapacitaciones(items);
+    } catch {
+      // Si algo falla en el parseo, dejamos lista vacía
+      setCapacitaciones([]);
+    }
+  }, [supportsQuery.data]);
 
   const capacitacionesFiltradas = capacitaciones.filter((capacitacion) => {
     const coincideTexto =
@@ -228,6 +242,20 @@ export const HistorialCapacitacionesView = () => {
 
   return (
     <div className="container mx-auto p-4 md:p-6 max-w-4xl">
+      {supportsQuery.isLoading && (
+        <LoadingState
+          title="Cargando historial"
+          description="Obteniendo visitas del instituto"
+        />
+      )}
+      {supportsQuery.isError && (
+        <ErrorState
+          title="Error al cargar"
+          description={(supportsQuery.error as Error)?.message || "Intenta nuevamente"}
+        />
+      )}
+      {/* Solo renderiza el contenido si no está cargando ni en error */}
+      {!supportsQuery.isLoading && !supportsQuery.isError && (
       <div className="flex flex-col gap-4 md:gap-6">
         {/* Filtros */}
         <Card>
@@ -274,8 +302,8 @@ export const HistorialCapacitacionesView = () => {
                   Enviado
                 </Button>
                 <Button
-                  variant={filtroEstado === "Enviado" ? "default" : "outline"}
-                  onClick={() => setFiltroEstado("Enviado")}
+                  variant={filtroEstado === "Rechazado" ? "default" : "outline"}
+                  onClick={() => setFiltroEstado("Rechazado")}
                   size="sm"
                   className="whitespace-nowrap"
                 >
@@ -418,7 +446,7 @@ export const HistorialCapacitacionesView = () => {
               );
             })
           )}
-        </div>
+  </div>
 
         {/* Resumen */}
         <Card>
@@ -470,6 +498,7 @@ export const HistorialCapacitacionesView = () => {
           </CardContent>
         </Card>
       </div>
+      )}
 
       {/* Confirmation Modal */}
       <ConfirmationModal
