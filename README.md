@@ -189,7 +189,6 @@ sequenceDiagram
         rect rgb(240,250,255)
         Página->>Usuario: redirigir("/sign-in")
         end
-    end
     else Con sesión
         rect rgb(245,255,245)
         note over Vista, TRPC: "Conseguir Técnico"
