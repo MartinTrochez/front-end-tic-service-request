@@ -6,9 +6,7 @@ import { nuevaSolicitudRouter } from '@/modules/nueva-capacitacion/server/proced
 export const appRouter = createTRPCRouter({
     perfil: perfilRouter,
     nuevaSolicitud: nuevaSolicitudRouter, 
-=======
     historialCapacitaciones: historialCapacitacionesRouter,
-    nuevaSolicitud: nuevaSolicitudRouter, 
 });
 
 // export type definition of API
