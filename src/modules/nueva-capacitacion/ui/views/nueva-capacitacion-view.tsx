@@ -1,244 +1,195 @@
+// modules/nueva-capacitacion/view.tsx
 "use client";
 
-import { useState } from "react";
-import * as React from "react";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import React, { useState } from "react";
+import { useTRPC } from "@/trpc/client";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import z from "zod";
+import type {
+  SupportType,
+  CreateSolicitudInput,
+} from "@/modules/nueva-capacitacion/server/procedures";
+import { directors } from "@/api/schema";
+import { toast } from "sonner";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-
-// Esquema de validación con Zod
-const schema = z.object({
-  nombre: z.string().min(3, "Mínimo 3 caracteres"),
-  fechaPropuesta: z.date().refine((date) => date instanceof Date, {
-    message: "Seleccioná una fecha",
-  }),
-  encargado: z.string().min(1, "Seleccioná un encargado"),
-  datosExtra: z.string().max(1000, "Máximo 1000 caracteres").optional(),
+const formSchema = z.object({
+  supportType: z.string().min(1, { message: "Elegí un tipo" }),
+  date: z.string().min(1, { message: "Elegí una fecha" }),
+  description: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof schema>;
+const INITIAL_SUPPORT_STATE = "Enviado";
+const TECHNICIAN_ID = 1; // id real del técnico en la tabla
 
-// Mock de encargados
-const ENCARGADOS = [
-  { id: "marcela", label: "Marcela Gómez" },
-  { id: "andres", label: "Andrés Pérez" },
-];
+export default function NuevaCapSimple() {
+  const [supportType, setSupportType] = useState("");
+  const [date, setDate] = useState("");
+  const [description, setDescription] = useState("");
+  const [msg, setMsg] = useState("");
 
-export default function NuevaCapacitacionPage() {
-  const [submitting, setSubmitting] = useState(false);
+  const trpc = useTRPC();
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      nombre: "",
-      fechaPropuesta: undefined,
-      encargado: "",
-      datosExtra: "",
-    },
-    mode: "onTouched",
-  });
+  // director logueado
+  const { data: directorData } = useSuspenseQuery(
+    trpc.perfil.getDirector.queryOptions(),
+  );
+  const director = directors.parse(directorData);
 
-  async function onSubmit(values: FormValues) {
-    try {
-      setSubmitting(true);
-      // TODO: sustituir por llamada real a la API
-      await new Promise((r) => setTimeout(r, 700));
-      console.log("Solicitud creada:", values);
-      form.reset();
-      alert("✅ Solicitud creada con éxito");
-    } catch (err) {
-      console.error(err);
-      alert("❌ Ocurrió un error al crear la solicitud");
-    } finally {
-      setSubmitting(false);
+  // tipos de capacitación
+  const { data: supportTypes } = useSuspenseQuery<SupportType[]>(
+    trpc.nuevaSolicitud.getAllSupportType.queryOptions(),
+  );
+
+  const createSolicitud = useMutation<unknown, Error, CreateSolicitudInput>(
+    trpc.nuevaSolicitud.createSolicitud.mutationOptions({
+      onSuccess: () => {
+        setMsg("Solicitud creada correctamente.");
+        setSupportType("");
+        setDate("");
+        setDescription("");
+
+        toast.success("Solicitud creada", {
+          description: "La solicitud se guardó correctamente.",
+          duration: 3000,
+        });
+      },
+      onError: (error: Error) => {
+        setMsg(error.message || "Error al crear la solicitud.");
+        toast.error("Error al crear la solicitud", {
+          description: error.message || "Revisá los datos e intentá nuevamente.",
+          duration: 3000,
+        });
+      },
+    }),
+  );
+
+  // hoy y mañana (para validar fecha > hoy)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  const todayStr = today.toISOString().split("T")[0];
+  const minDateStr = tomorrow.toISOString().split("T")[0];
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setMsg("");
+
+    const parsed = formSchema.safeParse({ supportType, date, description });
+    if (!parsed.success) {
+      setMsg(parsed.error.issues.map((i) => i.message).join(" · "));
+      return;
     }
-  }
+
+    // no permitir hoy ni fechas anteriores
+    if (date <= todayStr) {
+      setMsg("La fecha debe ser posterior a hoy.");
+      return;
+    }
+
+    const code = `REQ-${new Date()
+      .toISOString()
+      .slice(2, 10)
+      .replace(/-/g, "")}`;
+
+    const payload: CreateSolicitudInput = {
+      code,
+      institute: director.institute,
+      date: `${date}T00:00:00`,
+      supportType,
+      supportState: INITIAL_SUPPORT_STATE,
+      technician: {
+        id: TECHNICIAN_ID,
+      },
+      description: description || "Solicitud creada desde el portal web",
+    };
+
+    console.log("Payload enviado:", payload);
+    createSolicitud.mutate(payload);
+  };
 
   return (
-    <div className="container mx-auto p-4 md:p-6 max-w-4xl">
-      <div className="flex flex-col gap-4 md:gap-6">
-        {/* Header */}
-        <div className="flex flex-col gap-3 md:gap-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl md:text-3xl font-bold">Nueva Solicitud de capacitación</h1>
-            <Button
-              type="submit"
-              form="form-nueva-capacitacion"
-              className="bg-[#FA6D1C] hover:bg-[#338BE7] rounded-full text-sm md:text-base px-3 md:px-4"
-              disabled={submitting}
-            >
-              {submitting ? "Creando..." : "Crear"}
-            </Button>
-          </div>
-          <p className="text-muted-foreground text-sm md:text-base">
-            Completá los campos para registrar una nueva solicitud de capacitación.
-          </p>
+    <form onSubmit={handleSubmit} className="max-w-md p-4 space-y-3">
+      {/* Encargado (bloqueado visualmente) */}
+      <div>
+        <label className="block text-sm">Encargado</label>
+        <div className="px-2 py-1 border rounded bg-gray-300 text-gray-800 cursor-not-allowed">
+          Carlos Gonzalez
         </div>
-
-        {/* Formulario */}
-        <Card>
-          <CardHeader className="pb-3 md:pb-6">
-            <CardTitle className="text-base md:text-lg">Datos de la solicitud</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <Form {...form}>
-              <form
-                id="form-nueva-capacitacion"
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="flex flex-col gap-4 md:gap-6"
-              >
-                {/* Nombre de la solicitud */}
-                <FormField
-                  control={form.control}
-                  name="nombre"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nombre de la solicitud</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Ej: Taller de Redes Avanzadas"
-                          {...field}
-                          className="text-sm"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Fecha propuesta */}
-                <FormField
-                  control={form.control}
-                  name="fechaPropuesta"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Fecha propuesta</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "justify-start text-left font-normal text-sm",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {field.value ? format(field.value, "dd/MM/yyyy") : (
-                                <span>Elegí una fecha</span>
-                              )}
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Encargado */}
-                <FormField
-                  control={form.control}
-                  name="encargado"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Encargado</FormLabel>
-                      <FormControl>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <SelectTrigger className="text-sm">
-                            <SelectValue placeholder="Seleccioná un encargado" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {ENCARGADOS.map((e) => (
-                              <SelectItem key={e.id} value={e.id}>
-                                {e.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Datos extra */}
-                <FormField
-                  control={form.control}
-                  name="datosExtra"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Datos extra (opcional)</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Observaciones, requerimientos especiales, notas internas…"
-                          rows={4}
-                          {...field}
-                          className="text-sm"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Acciones secundarias */}
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => form.reset()}
-                    disabled={submitting}
-                    className="text-sm"
-                  >
-                    Limpiar
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="bg-[#FA6D1C] hover:bg-[#338BE7] rounded-full text-sm px-4"
-                    disabled={submitting}
-                  >
-                    {submitting ? "Creando..." : "Crear solicitud"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
       </div>
-    </div>
+
+      <div>
+        <label className="block text-sm">Email del encargado</label>
+        <div className="px-2 py-1 border rounded bg-gray-300 text-gray-800 cursor-not-allowed">
+          carlos@gmail.com
+        </div>
+      </div>
+
+      {/* Tipo de capacitación */}
+      <div>
+        <label className="block text-sm">Tipo de capacitación</label>
+        <select
+          value={supportType}
+          onChange={(e) => setSupportType(e.target.value)}
+          className="w-full px-2 py-1 border rounded bg-white"
+        >
+          <option value="">-- Seleccioná --</option>
+          {supportTypes.map((t) => (
+            <option key={t.name} value={t.name}>
+              {t.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Fecha propuesta */}
+      <div>
+        <label className="block text-sm">Fecha propuesta</label>
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className="w-full px-2 py-1 border rounded bg-white"
+          min={minDateStr}
+        />
+      </div>
+
+      {/* Descripción */}
+      <div>
+        <label className="block text-sm">Descripción</label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full px-2 py-1 border rounded bg-white"
+          placeholder="Breve detalle de la solicitud..."
+        />
+      </div>
+
+      {/* Botones */}
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          className="px-4 py-2 bg-[#FA6D1C] text-white rounded"
+          disabled={createSolicitud.isPending}
+        >
+          {createSolicitud.isPending ? "Creando..." : "Crear solicitud"}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setSupportType("");
+            setDate("");
+            setDescription("");
+            setMsg("");
+          }}
+          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          Limpiar
+        </button>
+      </div>
+
+      {msg && <p className="text-sm mt-2">{msg}</p>}
+    </form>
   );
 }
