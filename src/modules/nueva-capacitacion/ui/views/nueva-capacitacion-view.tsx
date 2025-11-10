@@ -18,74 +18,47 @@ const formSchema = z.object({
   description: z.string().optional(),
 });
 
-const INITIAL_SUPPORT_STATE = "Enviado";
-const TECHNICIAN_ID = 1; // id real del técnico en la tabla
+type FormValues = z.infer<typeof schema>;
 
-export default function NuevaCapSimple() {
-  const [supportType, setSupportType] = useState("");
-  const [date, setDate] = useState("");
-  const [description, setDescription] = useState("");
-  const [msg, setMsg] = useState("");
+// Mock de encargados
+const ENCARGADOS = [
+  { id: "marcela", label: "Marcela Gómez" },
+  { id: "andres", label: "Andrés Pérez" },
+];
 
-  const trpc = useTRPC();
+const fechasOcupadas = [
+  new Date(2025, 10, 1),
+  new Date(2025, 10, 25),
+  new Date(2025, 10, 9), 
+]
 
-  // director logueado
-  const { data: directorData } = useSuspenseQuery(
-    trpc.perfil.getDirector.queryOptions(),
-  );
-  const director = directors.parse(directorData);
+export default function NuevaCapacitacionPage() {
+  const [submitting, setSubmitting] = useState(false);
 
-  // tipos de capacitación
-  const { data: supportTypes } = useSuspenseQuery<SupportType[]>(
-    trpc.nuevaSolicitud.getAllSupportType.queryOptions(),
-  );
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      nombre: "",
+      fechaPropuesta: undefined,
+      encargado: "",
+      datosExtra: "",
+    },
+    mode: "onTouched",
+  });
 
-  const createSolicitud = useMutation<unknown, Error, CreateSolicitudInput>(
-    trpc.nuevaSolicitud.createSolicitud.mutationOptions({
-      onSuccess: () => {
-        setMsg("Solicitud creada correctamente.");
-        setSupportType("");
-        setDate("");
-        setDescription("");
-
-        toast.success("Solicitud creada", {
-          description: "La solicitud se guardó correctamente.",
-          duration: 3000,
-        });
-      },
-      onError: (error: Error) => {
-        setMsg(error.message || "Error al crear la solicitud.");
-        toast.error("Error al crear la solicitud", {
-          description: error.message || "Revisá los datos e intentá nuevamente.",
-          duration: 3000,
-        });
-      },
-    }),
-  );
-
-  // hoy y mañana (para validar fecha > hoy)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
-
-  const todayStr = today.toISOString().split("T")[0];
-  const minDateStr = tomorrow.toISOString().split("T")[0];
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setMsg("");
-
-    const parsed = formSchema.safeParse({ supportType, date, description });
-    if (!parsed.success) {
-      setMsg(parsed.error.issues.map((i) => i.message).join(" · "));
-      return;
-    }
-
-    // no permitir hoy ni fechas anteriores
-    if (date <= todayStr) {
-      setMsg("La fecha debe ser posterior a hoy.");
-      return;
+  async function onSubmit(values: FormValues) {
+    try {
+      setSubmitting(true);
+      // TODO: sustituir por llamada real a la API
+      await new Promise((r) => setTimeout(r, 700));
+      console.log("Solicitud creada:", values);
+      form.reset();
+      alert("✅ Solicitud creada con éxito");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Ocurrió un error al crear la solicitud");
+    } finally {
+      setSubmitting(false);
     }
 
     const code = `REQ-${new Date()
@@ -126,21 +99,145 @@ export default function NuevaCapSimple() {
         </div>
       </div>
 
-      {/* Tipo de capacitación */}
-      <div>
-        <label className="block text-sm">Tipo de capacitación</label>
-        <select
-          value={supportType}
-          onChange={(e) => setSupportType(e.target.value)}
-          className="w-full px-2 py-1 border rounded bg-white"
-        >
-          <option value="">-- Seleccioná --</option>
-          {supportTypes.map((t) => (
-            <option key={t.name} value={t.name}>
-              {t.name}
-            </option>
-          ))}
-        </select>
+        {/* Formulario */}
+        <Card>
+          <CardHeader className="pb-3 md:pb-6">
+            <CardTitle className="text-base md:text-lg">Datos de la solicitud</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <Form {...form}>
+              <form
+                id="form-nueva-capacitacion"
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="flex flex-col gap-4 md:gap-6"
+              >
+                {/* Nombre de la solicitud */}
+                <FormField
+                  control={form.control}
+                  name="nombre"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nombre de la solicitud</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Ej: Taller de Redes Avanzadas"
+                          {...field}
+                          className="text-sm"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Fecha propuesta */}
+                <FormField
+                  control={form.control}
+                  name="fechaPropuesta"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Fecha propuesta</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "justify-start text-left font-normal text-sm",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {field.value ? format(field.value, "dd/MM/yyyy") : (
+                                <span>Elegí una fecha</span>
+                              )}
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          disabled={fechasOcupadas}
+                          classNames={{
+                            day_disabled: "text-gray-400 opacity-50 line-through cursor-not-allowed"
+                          }}
+                        />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Encargado */}
+                <FormField
+                  control={form.control}
+                  name="encargado"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Encargado</FormLabel>
+                      <FormControl>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <SelectTrigger className="text-sm">
+                            <SelectValue placeholder="Seleccioná un encargado" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ENCARGADOS.map((e) => (
+                              <SelectItem key={e.id} value={e.id}>
+                                {e.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Datos extra */}
+                <FormField
+                  control={form.control}
+                  name="datosExtra"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Datos extra (opcional)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Observaciones, requerimientos especiales, notas internas…"
+                          rows={4}
+                          {...field}
+                          className="text-sm"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Acciones secundarias */}
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => form.reset()}
+                    disabled={submitting}
+                    className="text-sm"
+                  >
+                    Limpiar
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="bg-[#FA6D1C] hover:bg-[#338BE7] rounded-full text-sm px-4"
+                    disabled={submitting}
+                  >
+                    {submitting ? "Creando..." : "Crear solicitud"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Fecha propuesta */}

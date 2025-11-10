@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import Link from "next/link";
 
@@ -11,19 +11,15 @@ interface HomeViewProps {
 
 const HomeItem = ({ href, children }: HomeViewProps) => {
   return (
-    <Button
-      asChild
-      variant="secondary"
-      className="px-3.5 text-lg rounded-full"
-    >
+    <Button asChild variant="secondary" className="px-3.5 text-lg rounded-full">
       <Link href={href}>{children}</Link>
     </Button>
   );
 };
 
 const homeItems = [
-  { href: "/nueva-capacitacion", children: "Nueva Capacitacion" },
-  { href: "/historial-capacitaciones", children: "Historial Capacitaciones" },
+  { href: "/nueva-capacitacion", children: "Solicitar una visita" },
+  { href: "/historial-capacitaciones", children: "Historial de visitas" },
 ];
 
 export const HomeView = () => {

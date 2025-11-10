@@ -11,7 +11,7 @@ import {
 } from "@tanstack/react-query";
 import { LoadingState } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
-import { directors } from "@/api/schema";
+import { directors, technitians } from "@/api/schema";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,8 +43,8 @@ const formSchema = z.object({
     .min(10, { error: "El telefono tiene que tener 10 dígitos como mínimo" }),
 });
 
-export const PerfilView = () => {
-  const router = useRouter()
+export const PerfilDirectorView = () => {
+  const router = useRouter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -104,10 +104,10 @@ export const PerfilView = () => {
         ...director.institute,
         domain: values.instituteDomain,
       },
-    })
+    });
 
-    router.refresh()
-  }
+    router.refresh();
+  };
 
   // TODO: Agregar telefono, email y permitir cambios
   return (
@@ -214,6 +214,121 @@ export const PerfilView = () => {
                     : "Actualizar Datos"}
                 </Button>
               </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export const PerfilTechnitianView = () => {
+  const trpc = useTRPC();
+
+  const { data } = useSuspenseQuery(trpc.perfil.getTechnitian.queryOptions());
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "Pablo",
+      lastname: "Gomez",
+      dni: "39201934",
+      phone: "3764457842",
+      mail: "gomez@gmail.com",
+      instituteDomain: "instuto 1",
+    },
+  });
+
+  return (
+    <div className="flex flex-col items-center">
+      <Card className="overflow-hidden p-0 max-w-sm">
+        <div className="flex flex-col items-center justify-center p-6">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4">
+            <User className="w-8 h-8 md:w-10 md:h-10" />
+          </div>
+          <h1 className="text-xl font-bold">Datos</h1>
+        </div>
+        <CardContent>
+          <Form {...form}>
+            <form className="space-y-2 pb-8">
+              <FormField
+                name="name"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem className="grid grid-cols-3 items-center gap-2">
+                    <FormLabel className="text-right">Nombre:</FormLabel>
+                    <FormControl className="col-span-2">
+                      <Input {...field} readOnly />
+                    </FormControl>
+                    <FormMessage className="col-span-3" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                name="lastname"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem className="grid grid-cols-3 items-center gap-2">
+                    <FormLabel className="text-right">Apellido:</FormLabel>
+                    <FormControl className="col-span-2">
+                      <Input {...field} readOnly />
+                    </FormControl>
+                    <FormMessage className="col-span-3" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                name="dni"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem className="grid grid-cols-3 items-center gap-2">
+                    <FormLabel className="text-right">DNI:</FormLabel>
+                    <FormControl className="col-span-2">
+                      <Input {...field} readOnly />
+                    </FormControl>
+                    <FormMessage className="col-span-3" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                name="phone"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem className="grid grid-cols-3 items-center gap-2">
+                    <FormLabel className="text-right">Teléfono:</FormLabel>
+                    <FormControl className="col-span-2">
+                      <Input {...field} readOnly />
+                    </FormControl>
+                    <FormMessage className="col-span-3" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                name="mail"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem className="grid grid-cols-3 items-center gap-2">
+                    <FormLabel className="text-right">Email:</FormLabel>
+                    <FormControl className="col-span-2">
+                      <Input {...field} readOnly />
+                    </FormControl>
+                    <FormMessage className="col-span-3" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                name="instituteDomain"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem className="grid grid-cols-3 items-center gap-2">
+                    <FormLabel className="text-right">Instituto:</FormLabel>
+                    <FormControl className="col-span-2">
+                      <Input {...field} readOnly />
+                    </FormControl>
+                    <FormMessage className="col-span-3" />
+                  </FormItem>
+                )}
+              />
             </form>
           </Form>
         </CardContent>

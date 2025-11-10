@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Bell } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,10 @@ interface NavbarItemProps {
   href: string;
   children: React.ReactNode;
   isActive: boolean;
+}
+
+interface NotificationProps {
+  isOpen: boolean
 }
 
 const NavbarItem = ({ href, children, isActive }: NavbarItemProps) => {
@@ -34,16 +39,30 @@ const NavbarItem = ({ href, children, isActive }: NavbarItemProps) => {
 
 const navbarItems = [
   { href: "/", children: "Inicio" },
-  { href: "/perfil", children: "Perfil" },
+  { href: "/perfil-director", children: "Perfil de Director" },
+  { href: "/perfil-referente", children: "Perfil de Referente" },
 ];
+
+const NotificationCapacitacion = ({isOpen}: NotificationProps) => {
+  return (
+    <div>
+      <p>notificacon</p>
+    </div>
+  )
+}
 
 export const Navbar = () => {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   const handleSignOut = () => {
     deleteSession();
   };
+
+  const onBellPressed = () => {
+    // NOTE: traer un componente que advierta al usuario que tiene capacitaciones finalizadas y sin validar
+  }
 
   return (
     <nav className="px-4 h-20 flex border-b-2 border-b-black justify-between font-medium bg-white">
@@ -67,6 +86,12 @@ export const Navbar = () => {
             {item.children}
           </NavbarItem>
         ))}
+        {// NOTE: Poner un icono o boton para ver notificaciones
+        }
+        <Button onClick={onBellPressed}>
+          <Bell />
+        </Button>
+
       </div>
 
       <div className="hidden lg:flex gap-4 items-center pr-3">
@@ -87,8 +112,9 @@ export const Navbar = () => {
           variant="ghost"
           className="size-12 border-transparent bg-white"
           onClick={() => setIsSidebarOpen(true)}
-        ></Button>
-        <MenuIcon />
+        >
+          <MenuIcon />
+        </Button>
       </div>
     </nav>
   );
