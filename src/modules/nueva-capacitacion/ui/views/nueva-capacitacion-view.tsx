@@ -1,44 +1,21 @@
+// modules/nueva-capacitacion/view.tsx
 "use client";
 
-import { useState } from "react";
-import * as React from "react";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import React, { useState } from "react";
+import { useTRPC } from "@/trpc/client";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import z from "zod";
+import type {
+  SupportType,
+  CreateSolicitudInput,
+} from "@/modules/nueva-capacitacion/server/procedures";
+import { directors } from "@/api/schema";
+import { toast } from "sonner";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-
-// Esquema de validación con Zod
-const schema = z.object({
-  nombre: z.string().min(3, "Mínimo 3 caracteres"),
-  fechaPropuesta: z.date().refine((date) => date instanceof Date, {
-    message: "Seleccioná una fecha",
-  }),
-  encargado: z.string().min(1, "Seleccioná un encargado"),
-  datosExtra: z.string().max(1000, "Máximo 1000 caracteres").optional(),
+const formSchema = z.object({
+  supportType: z.string().min(1, { message: "Elegí un tipo" }),
+  date: z.string().min(1, { message: "Elegí una fecha" }),
+  description: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -83,28 +60,44 @@ export default function NuevaCapacitacionPage() {
     } finally {
       setSubmitting(false);
     }
-  }
+
+    const code = `REQ-${new Date()
+      .toISOString()
+      .slice(2, 10)
+      .replace(/-/g, "")}`;
+
+    const payload: CreateSolicitudInput = {
+      code,
+      institute: director.institute,
+      date: `${date}T00:00:00`,
+      supportType,
+      supportState: INITIAL_SUPPORT_STATE,
+      technician: {
+        id: TECHNICIAN_ID,
+      },
+      description: description || "Solicitud creada desde el portal web",
+    };
+
+    console.log("Payload enviado:", payload);
+    createSolicitud.mutate(payload);
+  };
 
   return (
-    <div className="container mx-auto p-4 md:p-6 max-w-4xl">
-      <div className="flex flex-col gap-4 md:gap-6">
-        {/* Header */}
-        <div className="flex flex-col gap-3 md:gap-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl md:text-3xl font-bold">Nueva Solicitud de capacitación</h1>
-            <Button
-              type="submit"
-              form="form-nueva-capacitacion"
-              className="bg-[#FA6D1C] hover:bg-[#338BE7] rounded-full text-sm md:text-base px-3 md:px-4"
-              disabled={submitting}
-            >
-              {submitting ? "Creando..." : "Crear"}
-            </Button>
-          </div>
-          <p className="text-muted-foreground text-sm md:text-base">
-            Completá los campos para registrar una nueva solicitud de capacitación.
-          </p>
+    <form onSubmit={handleSubmit} className="max-w-md p-4 space-y-3">
+      {/* Encargado (bloqueado visualmente) */}
+      <div>
+        <label className="block text-sm">Encargado</label>
+        <div className="px-2 py-1 border rounded bg-gray-300 text-gray-800 cursor-not-allowed">
+          Carlos Gonzalez
         </div>
+      </div>
+
+      <div>
+        <label className="block text-sm">Email del encargado</label>
+        <div className="px-2 py-1 border rounded bg-gray-300 text-gray-800 cursor-not-allowed">
+          carlos@gmail.com
+        </div>
+      </div>
 
         {/* Formulario */}
         <Card>
@@ -246,6 +239,54 @@ export default function NuevaCapacitacionPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+
+      {/* Fecha propuesta */}
+      <div>
+        <label className="block text-sm">Fecha propuesta</label>
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className="w-full px-2 py-1 border rounded bg-white"
+          min={minDateStr}
+        />
+      </div>
+
+      {/* Descripción */}
+      <div>
+        <label className="block text-sm">Descripción</label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full px-2 py-1 border rounded bg-white"
+          placeholder="Breve detalle de la solicitud..."
+        />
+      </div>
+
+      {/* Botones */}
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          className="px-4 py-2 bg-[#FA6D1C] text-white rounded"
+          disabled={createSolicitud.isPending}
+        >
+          {createSolicitud.isPending ? "Creando..." : "Crear solicitud"}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setSupportType("");
+            setDate("");
+            setDescription("");
+            setMsg("");
+          }}
+          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          Limpiar
+        </button>
+      </div>
+
+      {msg && <p className="text-sm mt-2">{msg}</p>}
+    </form>
   );
 }
