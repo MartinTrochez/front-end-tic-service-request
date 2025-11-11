@@ -114,7 +114,7 @@ La Plataforma de Solicitudes de Servicio TIC sigue una arquitectura modular dise
 2. Lógica de Módulo: La página delega al módulo correspondiente los procedimientos del servidor para operaciones de datos.                 .
 
 En la siguiente figura se muestra como se utiliza trpc para cachear las respuestas de la API:
-![TRPC y Cache](./Flujo-Request-Cache) 
+![TRPC y Cache](./Flujo-Request-Cache.png) 
 
 Como ejemplo de como funcionan los request se muestra parte del código correspondiente al módulo de perfil:
 ```typescript
