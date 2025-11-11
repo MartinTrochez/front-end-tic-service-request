@@ -312,9 +312,9 @@ Esta sección describe las funcionalidades planificadas para futuras versiones d
 
 Aca se muestra la evolución del diseño de las páginas para la aplicación, se comenzo a trabajar un diseño borrador en excalidraw, y luego se utilizó Figma. Para la segunda versión se tomo más en cuenta los colores encontrador en la página web de la [Dirección de TIC](tic.edu.misiones.gob.a) 
 
-![Diseño Inicial en Excalidraw](Mock-Up-Diseño/Diseño Inicial en Excalidraw.png)
+![Diseño Inicial en Excalidraw](Mock-Up-Diseño/DiseñoInicialExcalidraw.png)
 
-![Primer Diseño Figma](Mock-Up-Diseño/Primer Diseño Figma.png)
+![Primer Diseño Figma](Mock-Up-Diseño/PrimerDiseñoFigma.png)
 
-![Segundo Diseño Figma](Mock-Up-Diseño/Segundo Diseño Figma.png)
+![Segundo Diseño Figma](Mock-Up-Diseño/SegundoDiseñoFigma.png)
 
