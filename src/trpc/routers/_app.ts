@@ -1,7 +1,7 @@
 import { perfilRouter } from '@/modules/perfil/server/procedures';
-import { historialCapacitacionesRouter } from '@/modules/historial-capacitaciones/server/procedures';
+import { historialCapacitacionesRouter } from '@/modules/historial-solicitudes/server/procedures';
 import { createTRPCRouter } from '../init';
-import { nuevaSolicitudRouter } from '@/modules/nueva-capacitacion/server/procedures';
+import { nuevaSolicitudRouter } from '@/modules/nueva-solicitud/server/procedures';
 
 export const appRouter = createTRPCRouter({
     perfil: perfilRouter,

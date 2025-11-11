@@ -18,8 +18,8 @@ const HomeItem = ({ href, children }: HomeViewProps) => {
 };
 
 const homeItems = [
-  { href: "/nueva-capacitacion", children: "Solicitar una visita" },
-  { href: "/historial-capacitaciones", children: "Historial de visitas" },
+  { href: "/nueva-visita", children: "Solicitar una visita" },
+  { href: "/historial-visitas", children: "Historial de visitas" },
 ];
 
 export const HomeView = () => {

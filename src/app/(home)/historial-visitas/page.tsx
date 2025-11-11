@@ -1,4 +1,4 @@
-import { HistorialCapacitacionesView } from "@/modules/historial-capacitaciones/ui/views/historial-capacitaciones-view";
+import { HistorialCapacitacionesView } from "@/modules/historial-solicitudes/ui/views/historial-capacitaciones-view";
 import { getSession } from "@/lib/session";
 import { getQueryClient, trpc } from "@/trpc/server";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
